@@ -1,0 +1,36 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: typecheck · test · build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: typecheck
+        run: npm run typecheck
+
+      - name: unit tests
+        run: npm test
+
+      - name: build
+        run: npm run build
+        env:
+          # Build only renders static pages; no API calls. Provide a dummy key
+          # so any module-level `new Anthropic()` doesn't throw if the SDK
+          # changes its constructor behavior in a future version.
+          ANTHROPIC_API_KEY: dummy

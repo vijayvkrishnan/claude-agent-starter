@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: #0A0A0A;
+  color: #EDEDED;
+  font-feature-settings: "ss01", "ss03", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Tabular numbers wherever data appears (task counts, costs, latencies). */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Custom scrollbar tuned to the dark surface. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #2A2A2A;
+  border-radius: 999px;
+  border: 2px solid #0A0A0A;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3A3A3A;
+}
+
+/* Selection in accent color. Small detail that signals craft. */
+::selection {
+  background: rgba(255, 149, 0, 0.3);
+  color: #FFFFFF;
+}
+
+/* The grain overlay on the body. Subtle texture to break up flat dark. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.025;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+/* The streaming cursor that follows the last token while the agent writes. */
+.cursor-blink::after {
+  content: "▍";
+  display: inline-block;
+  animation: blink 1s steps(1) infinite;
+  color: #FF9500;
+  margin-left: 1px;
+  font-weight: 400;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* Diagonal hatch background for the empty Cmd+K hint state. */
+.hatch {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 8px,
+    rgba(255, 255, 255, 0.015) 8px,
+    rgba(255, 255, 255, 0.015) 9px
+  );
+}
+
+/* Thinking indicator: soft pulse on the orange dot. */
+.thinking-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #FF9500;
+  box-shadow: 0 0 12px rgba(255, 149, 0, 0.6);
+  animation: thinking-pulse 1.4s ease-in-out infinite;
+}
+@keyframes thinking-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+/* Subtle inner border helper. Used on cards and panels. */
+.ring-inner {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}

@@ -1,0 +1,23 @@
+name: evals
+
+on:
+  workflow_dispatch:
+
+# The eval suite makes real Anthropic API calls (~$0.15 per run on Opus 4.7
+# + Sonnet 4.6 as judge). Manual trigger only — adding it to PR/push would
+# burn money and rate-limit on every commit. To run from CI, dispatch this
+# workflow manually after tuning a system prompt.
+
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: |
+          echo "ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}" > .env.local
+          npm run evals
