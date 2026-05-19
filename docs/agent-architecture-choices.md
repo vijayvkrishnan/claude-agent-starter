@@ -1,10 +1,12 @@
-# What the Claude Agent SDK's tool runner doesn't ship
+# Choosing your agent architecture: manual loop, Agent SDK, or Managed Agents
+
+*Three Claude agent primitives, when each is the right one, and why this starter is v1.*
 
 The Anthropic SDK ships with a tool runner that handles the entire agentic loop for you. You define your tools, hand them to `client.beta.messages.toolRunner({...})`, and iterate over the result. The model calls tools, the SDK runs them, results feed back, the loop ends when the model is done. About ten lines of code.
 
-It's the right call most of the time. For an in-product agent that talks to your real users, it's not.
+It's the right call once you've internalized what the loop does. Before that — for the founder writing their first agent for a real user-facing product — there's value in seeing the loop, owning the decision points between iterations, and feeling the cost of every choice the SDK quietly makes for you.
 
-I built [`claude-agent-starter`](https://github.com/vijayvkrishnan/claude-agent-starter) as the production version of an in-product agent. The biggest single decision in that build was rewriting the tool-use loop manually instead of using the SDK's runner. This post is what that costs you, and what you gain.
+I built [`claude-agent-starter`](https://github.com/vijayvkrishnan/claude-agent-starter) as v1 of a deliberate series. v1 is a manual tool-use loop in TypeScript — what this post is about. v2 is the same product rewritten on the Agent SDK. v3 is the [Managed Agents](https://www.anthropic.com/engineering/managed-agents) version, with brain/hands decoupling and session-log persistence. Each version is a teaching artifact; together they're a curriculum. The biggest single decision in v1 was rewriting the tool-use loop manually instead of using the SDK's runner. This post is what that costs you, what you gain, and where v2 and v3 take over.
 
 ## What the tool runner gives you (the easy path)
 
@@ -147,7 +149,7 @@ The costs are real:
 - **Bugs you have to find yourself.** The SDK runner has been hardened by usage; your loop hasn't. Off-by-one in the iteration counter, wrong stop-reason handling, a tool result that drops on the floor. These are yours to discover.
 - **Context that goes stale.** When the SDK ships a new feature (compaction, programmatic tool calling, a new tool runner shape), you adopt it later than the runner-using teams. You're maintaining your own version of someone else's well-maintained primitive.
 
-These are real costs. For most teams shipping AI features, they're worth paying once.
+These are real costs. For the founder shipping their first in-product agent — where they want to see every decision point and own every line of policy — they're worth paying once. For teams past that stage, the Agent SDK and Managed Agents amortize them.
 
 ## When to use the tool runner anyway
 
@@ -160,6 +162,24 @@ Three cases where the tool runner is the right call:
 **One-shot tool calls.** The agent makes a single tool call and returns. There's no loop to instrument. The runner's abstraction matches the problem shape exactly.
 
 If you're outside those three, the manual loop pays for itself the first time it refuses a $50 runaway request.
+
+## Where v2 (Agent SDK) and v3 (Managed Agents) take over
+
+The manual loop is v1. Two graduations from here.
+
+**v2 — the Agent SDK once the loop is internalized.** Once a founder has shipped the manual loop, run it for two weeks, and watched it fail in interesting ways, the abstraction trade-off changes. They've earned the SDK. The 150 lines collapse back to 10. Bug surface shrinks. The decisions they used to make explicitly — when to short-circuit, what to log per iteration, how the cost ceiling reads the request — they now make once, declaratively, and the SDK enforces them. v2 of the starter is the same product on the SDK, with the production primitives ported as SDK hooks.
+
+**v3 — Managed Agents at scale.** When the agent grows past a single session — when it needs persistent memory across runs, sandboxed tool execution, and the model and the harness running on different machines — Managed Agents is the answer. The [brain/hands decoupling](https://www.anthropic.com/engineering/managed-agents) is what you want once the agent has a meaningful production footprint: the brain (model + reasoning loop) lives in one process, the hands (sandbox + tool execution) live in another, the session log is the external memory. The destructive-op gate that lives at the loop layer in v1 becomes a hand-side concern in v3 — and that's the right place for it once you're at scale.
+
+The Managed Agents surface area expanded materially in May 2026, and the place where v3 starts to be the *right* call has moved earlier on the curve. Three additions worth knowing:
+
+- **Multiagent Orchestration** lets a lead agent delegate to specialist sub-agents — each with their own model, prompt, and tools — working in parallel on a shared filesystem. The "spawn three Sonnet sub-agents in parallel for risk analysis" pattern in v1's `analyze_workspace_health` tool generalizes one level up here.
+- **Dreaming** runs a scheduled review of prior session memory and curates patterns the agent then internalizes. The natural answer for an agent that should compound on memory — not because the underlying model improves, but because the memory store does.
+- **Outcomes** uses a separate grading agent to score task quality and re-run when the result misses bar. A managed analog to the Sonnet-as-judge eval pattern in v1's `evals/` directory — the right call when graded re-runs are a product feature, not just CI.
+
+If a founder's build fits any of these shapes — true multi-agent parallelism, an agent that should compound on memory, graded outcomes as a product feature — v3 is probably the starting point, not the ending point.
+
+The point of the series is not that v1 is best. It's that the right starting point depends on where the founder is. Most are building their first in-product agent and benefit from seeing the loop. Some have shipped enough to graduate to the SDK. A few are running production-grade agents at scale and need Managed Agents. v1 is the door; v2 and v3 are the rest of the building.
 
 ## What you ship
 

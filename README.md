@@ -21,6 +21,18 @@ Every team shipping a user-facing AI feature ends up writing the same plumbing t
 
 This repo is the second version, sitting in front of you on day one. The agent loop is real, the tools are typed end-to-end, the cost ceiling actually refuses requests it can't afford, the destructive operations actually get blocked by a hook the agent can reason about, and the eval harness gives you a real number you can put in front of an investor when they ask how you measure quality.
 
+## When to use this vs Agent SDK vs Managed Agents
+
+Three Claude agent primitives, three rungs on the same ladder.
+
+- **This starter (manual tool-use loop)** — full control between iterations, full telemetry, custom hooks. Right when you're shipping your first in-product agent and want to see the loop, or when your control flow doesn't fit cleanly into someone else's abstraction.
+- **[Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk)** — collapses the manual loop back to ~10 lines of code with `toolRunner`. Session lifecycle, retries, iteration logic handled. Right once you've internalized the loop and your hooks fit standard shapes.
+- **[Managed Agents](https://www.anthropic.com/engineering/managed-agents)** — full abstraction with brain/hands decoupling. As of May 2026: Multiagent Orchestration for parallel sub-agents on a shared filesystem, Dreaming for memory that improves across sessions, Outcomes for graded re-runs. Right when a build fits that shape — true multi-agent parallelism, cross-session memory, or graded outcomes as a product feature.
+
+Most teams walk manual → SDK → Managed as needs grow. This starter is deliberately v1 of that progression.
+
+For the deeper rationale, see [`docs/agent-architecture-choices.md`](./docs/agent-architecture-choices.md).
+
 ## What's in the demo
 
 The demo is a small B2B project workspace with projects, tasks, and users, the kind of data every internal tool eventually needs some shape of. The interesting part is the `⌘K` command bar: it's a Claude Agent SDK loop wired to that data through eight tools.
@@ -104,7 +116,7 @@ Plus a `.claude/commands/eval-agent.md` slash command for running the eval suite
                   lib/agent/sub-agents.ts (Sonnet 4.6)
 ```
 
-For the deeper rationale on the manual-loop choice and the five production primitives the SDK's tool runner doesn't ship, see [`docs/why-manual-tool-loop.md`](./docs/why-manual-tool-loop.md).
+For the deeper rationale on the manual-loop choice and the five production primitives the SDK's tool runner doesn't ship, see [`docs/agent-architecture-choices.md`](./docs/agent-architecture-choices.md).
 
 ## Build your first tool
 
